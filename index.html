@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0E2440" />
+  <title>Resilient Wealth Group · Platform</title>
+  <link rel="icon" href="assets/img/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <div id="root"></div>
+  <noscript style="display:block;padding:40px;text-align:center;font-family:sans-serif">This CRM requires JavaScript to be enabled.</noscript>
+
+  <!-- Firebase (compat SDK via CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-init.js"></script>
+
+  <!-- engine -->
+  <script src="assets/js/modules.js"></script>
+  <script src="assets/js/scoring.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/analytics.js"></script>
+  <!-- scorecard: money model + data layer (dormant until a module starts them) -->
+  <script src="assets/js/scorecard-config.js"></script>
+  <script src="assets/js/scorecard-data.js"></script>
+  <!-- views (shared renderers used by the modules) -->
+  <script src="assets/js/views/login.js"></script>
+  <script src="assets/js/views/drawer.js"></script>
+  <script src="assets/js/views/leadtable.js"></script>
+  <script src="assets/js/views/agent.js"></script>
+  <script src="assets/js/views/admin.js"></script>
+  <!-- modules: each one registers its own nav, views and actions -->
+  <script src="assets/js/modules/home.js"></script>
+  <script src="assets/js/modules/scorecard.js"></script>
+  <script src="assets/js/modules/leads.js"></script>
+  <!-- kernel (last: boots once everything has registered) -->
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

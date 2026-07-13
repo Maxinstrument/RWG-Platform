@@ -1,0 +1,92 @@
+rules_version = '2';
+// RWG Platform — Firestore security rules
+// Paste these into: Firebase Console → Firestore Database → Rules → Publish.
+//
+// This is a SUPERSET of the live CRM rules. The users / leads / deleted_leads /
+// reports / config blocks are byte-for-byte the CRM's, so publishing this does
+// not change any CRM behavior. It only ADDS the scorecard collections
+// (cases, weeks). config/agents is covered by the existing config block.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    // The owner account is allowed to bootstrap itself as an active admin on first login.
+    function isOwnerEmail() {
+      return signedIn() && request.auth.token.email != null
+        && request.auth.token.email.lower() == 'temperan.carlos@gmail.com';
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      // First-login self-create: agents start pending; the owner email may create itself as active admin.
+      allow create: if signedIn() && request.auth.uid == uid && (
+        (request.resource.data.role == 'agent' && request.resource.data.status == 'pending')
+        || (isOwnerEmail() && request.resource.data.role == 'admin' && request.resource.data.status == 'active')
+      );
+      // Only the owner/admin can approve, deny, or change roles.
+      allow update, delete: if isAdmin();
+    }
+
+    match /leads/{id} {
+      allow read:   if signedIn() && (isAdmin() || resource.data.assignedTo == request.auth.uid);
+      allow create: if signedIn() && (isAdmin() || request.resource.data.assignedTo == request.auth.uid);
+      allow update: if signedIn() && (isAdmin() || resource.data.assignedTo == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // Deletion archive — a behind-the-scenes copy of every deleted lead, admins only.
+    match /deleted_leads/{id} {
+      allow read, create, delete: if isAdmin();
+    }
+
+    // Frozen weekly performance reports — admins only.
+    match /reports/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /config/{doc} {
+      allow read:  if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Scorecard: opportunities ────────────────────────────────
+    // Team-readable (client names visible to all, matching today's Team Cases).
+    // An agent may write only their own cases; admins may write any.
+    // openedWeek is immutable and the lifecycle stamps are write-once, so each
+    // week's numbers are permanent. Admins can still correct a case.
+    match /cases/{id} {
+      allow read:   if signedIn();
+      allow create: if signedIn() && (
+        isAdmin() || request.resource.data.agentUid == request.auth.uid
+      );
+      allow update: if signedIn() && (
+        isAdmin() || (
+          resource.data.agentUid == request.auth.uid
+          && request.resource.data.agentUid == resource.data.agentUid
+          && request.resource.data.get('openedWeek', '') == resource.data.get('openedWeek', '')
+          && (resource.data.get('submittedAt', null) == null
+              || request.resource.data.get('submittedAt', null) == resource.data.get('submittedAt', null))
+          && (resource.data.get('closedAt', null) == null
+              || request.resource.data.get('closedAt', null) == resource.data.get('closedAt', null))
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ── Scorecard: weekly submissions ───────────────────────────
+    // Aggregate production, team-readable. Doc id is agentUid_weekEnding, so an
+    // agent may only write a doc whose agentUid is their own account.
+    match /weeks/{id} {
+      allow read:   if signedIn();
+      allow create, update: if signedIn() && (
+        isAdmin() || request.resource.data.agentUid == request.auth.uid
+      );
+      allow delete: if isAdmin();
+    }
+  }
+}
