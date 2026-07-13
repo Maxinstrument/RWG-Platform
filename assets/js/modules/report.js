@@ -58,6 +58,68 @@ window.RWG = window.RWG || {};
     return sc.CHAIRMAN.STARTING_FYC_TOTAL + fyc;
   }
 
+  // The management "glance": each money metric split Opened / Submitted / Closed / Total.
+  function glanceMatrix(cases, week) {
+    const sc = S();
+    const b = { Opened: [], Submitted: [], Closed: [] };
+    cases.forEach(c => { if (!sc.activeInWeek(c, week)) return; const k = sc.bucketForWeek(c, week); if (b[k]) b[k].push(c); });
+    const sum = (list, fn) => list.reduce((a, c) => a + fn(c), 0);
+    const rows = [
+      { label: 'Annualized premium', fn: c => sc.annualizedPremium(c.product, c.amount) },
+      { label: 'FYC', fn: c => sc.fyc(c.product, c.amount) },
+      { label: 'Revenue', fn: c => sc.revenue(c.product, c.amount, c.aum) },
+      { label: 'AUM', fn: c => Number(c.aum) || 0 },
+      { label: 'Annuity deposits', fn: c => c.product === 'annuity' ? (Number(c.amount) || 0) : 0 }
+    ];
+    const tr = rows.map(r => {
+      const o = sum(b.Opened, r.fn), s = sum(b.Submitted, r.fn), cl = sum(b.Closed, r.fn);
+      return `<tr><td>${r.label}</td><td class="num">${money(o)}</td><td class="num">${money(s)}</td><td class="num">${money(cl)}</td><td class="num"><b>${money(o + s + cl)}</b></td></tr>`;
+    }).join('');
+    return `<div class="card"><div class="card-head"><h3>This week at a glance</h3></div>
+      <div class="table-wrap"><table class="data"><thead><tr><th>Metric</th><th class="num">Opened</th><th class="num">Submitted</th><th class="num">Closed</th><th class="num">Total</th></tr></thead><tbody>${tr}</tbody></table></div></div>`;
+  }
+
+  // Product mix: counts by stage and total revenue per product for the week.
+  function mixTable(cases, week) {
+    const sc = S(), byP = {};
+    cases.forEach(c => {
+      if (!sc.activeInWeek(c, week)) return;
+      const k = sc.bucketForWeek(c, week);
+      const p = byP[c.product] || (byP[c.product] = { o: 0, s: 0, cl: 0, rev: 0 });
+      if (k === 'Opened') p.o++; else if (k === 'Submitted') p.s++; else if (k === 'Closed') p.cl++;
+      p.rev += sc.revenue(c.product, c.amount, c.aum);
+    });
+    const order = sc.PRODUCTS.map(p => p.id).filter(id => byP[id]);
+    if (!order.length) return '';
+    const tr = order.map(id => { const p = byP[id]; return `<tr><td>${esc(sc.productName(id))}</td><td class="num">${p.o}</td><td class="num">${p.s}</td><td class="num">${p.cl}</td><td class="num">${money(p.rev)}</td></tr>`; }).join('');
+    return `<div class="card"><div class="card-head"><h3>Product mix</h3></div>
+      <div class="table-wrap"><table class="data"><thead><tr><th>Product</th><th class="num">Opened</th><th class="num">Submitted</th><th class="num">Closed</th><th class="num">Revenue</th></tr></thead><tbody>${tr}</tbody></table></div></div>`;
+  }
+
+  // A person's weekly goals vs actuals (the old "My Week" card, management side).
+  function goalsCard(name, cases, week) {
+    const sc = S(), g = sc.goalsFor(name);
+    if (!g) return '';
+    const b = { Opened: [], Submitted: [], Closed: [] };
+    cases.forEach(c => { if (!sc.activeInWeek(c, week)) return; const k = sc.bucketForWeek(c, week); if (b[k]) b[k].push(c); });
+    const annClosed = b.Closed.reduce((a, c) => a + sc.annualizedPremium(c.product, c.amount), 0);
+    const rows = [
+      { label: 'Opportunities opened', val: b.Opened.length, target: g.opps },
+      { label: 'New business submitted', val: b.Submitted.length, target: g.nbSub },
+      { label: 'New business closed', val: b.Closed.length, target: g.nbClosed },
+      { label: 'Annualized premium closed', val: annClosed, target: g.closeAnnualizedPremium || 0, money: true }
+    ];
+    let met = 0;
+    const body = rows.map(r => {
+      const pct = r.target > 0 ? Math.min(100, Math.round(100 * r.val / r.target)) : 100;
+      const hit = r.val >= r.target; if (hit) met++;
+      const disp = r.money ? (money(r.val) + ' / ' + money(r.target)) : (r.val + ' / ' + r.target);
+      return `<div class="rp-goal"><div class="rp-goal-top"><span>${r.label}</span><span>${disp}${hit ? ' ✓' : ''}</span></div>
+        <div class="sc-bar"><div class="sc-bar-fill ${hit ? 'ok' : ''}" style="width:${pct}%"></div></div></div>`;
+    }).join('');
+    return `<div class="card"><div class="card-head"><h3>Weekly goals</h3><span class="sub">${met} of ${rows.length} met</span></div>${body}</div>`;
+  }
+
   function whoOptions(selected) {
     const names = {};
     D().cases().forEach(c => { if (c.agentName) names[c.agentName] = 1; });
@@ -114,14 +176,14 @@ window.RWG = window.RWG || {};
       <div class="sc-bar-note">${clubPct}% of the ${money(goal)} goal &middot; pace ${money(sc.FYC_PER_WEEK_AT_TARGET)}/week of FYC</div>
     </div>`;
 
-    return glance + `
+    return glance + glanceMatrix(D().cases(), week) + `
       <div class="card">
         <div class="card-head"><h3>By agent, this week</h3><span class="sub">Sorted by annualized premium</span></div>
         <div class="table-wrap"><table class="data">
           <thead><tr><th>Agent</th><th class="num">Opened</th><th class="num">Subm.</th><th class="num">Closed</th><th class="num">Ann. premium</th><th class="num">Revenue</th><th class="num">Pace</th></tr></thead>
           <tbody>${lead}${teamRow}</tbody>
         </table></div>
-      </div>` + club;
+      </div>` + mixTable(D().cases(), week) + club;
   }
 
   function personView(name, week) {
@@ -157,7 +219,7 @@ window.RWG = window.RWG || {};
       ? rowsFor(b.Closed, 'Closed') + rowsFor(b.Submitted, 'Submitted') + rowsFor(b.Opened, 'Opened')
       : `<div class="empty" style="padding:30px"><div class="ec">🗂</div><h3>Nothing this week for ${esc(name)}</h3></div>`;
 
-    return glance + `<div class="card">${body}</div>`;
+    return glance + goalsCard(name, cases, week) + glanceMatrix(cases, week) + mixTable(cases, week) + `<div class="card">${body}</div>`;
   }
 
   RWG.modules.register({

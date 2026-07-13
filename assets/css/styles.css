@@ -765,3 +765,8 @@ table.data .cell-name,table.data .cell-sub{line-height:1.25;}
 .cs-correct{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);}
 .cs-correct-h{font-family:'Fraunces',serif;font-size:15px;color:var(--navy);margin-bottom:10px;}
 @media (max-width:640px){ .cs-modal-grid{grid-template-columns:1fr;} }
+
+/* ── Report goals card ───────────────────────────────────── */
+.rp-goal{margin:10px 0;}
+.rp-goal-top{display:flex;justify-content:space-between;font-size:13px;color:var(--ink);margin-bottom:5px;}
+.rp-goal-top span:last-child{font-weight:600;color:var(--navy);}
