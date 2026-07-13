@@ -749,3 +749,19 @@ table.data .cell-name,table.data .cell-sub{line-height:1.25;}
 .rp-total td{border-top:2px solid var(--line-strong);font-weight:700;background:var(--field);}
 .rp-club{margin-top:18px;}
 .rp-club-num{font-family:'Fraunces',serif;font-size:34px;color:var(--navy);margin:6px 0 10px;}
+
+/* ── All Cases browser ───────────────────────────────────── */
+.cs-bar{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.cs-bar-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.cs-search{flex:1;min-width:200px;}
+.cs-table th .cs-th{cursor:pointer;user-select:none;white-space:nowrap;}
+.cs-table th .cs-th:hover{color:var(--gold);}
+.cs-row{cursor:pointer;}
+.cs-row:hover td{background:var(--field);}
+.cs-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.cs-modal-grid label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin-bottom:5px;}
+.cs-modal-grid input,.cs-modal-grid select{width:100%;}
+.cs-modal-grid .hint{font-size:11.5px;color:var(--muted);margin-top:4px;}
+.cs-correct{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);}
+.cs-correct-h{font-family:'Fraunces',serif;font-size:15px;color:var(--navy);margin-bottom:10px;}
+@media (max-width:640px){ .cs-modal-grid{grid-template-columns:1fr;} }
