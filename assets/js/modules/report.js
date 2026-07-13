@@ -120,6 +120,40 @@ window.RWG = window.RWG || {};
     return `<div class="card"><div class="card-head"><h3>Weekly goals</h3><span class="sub">${met} of ${rows.length} met</span></div>${body}</div>`;
   }
 
+  // Read-only day-by-day activity for one agent's week, from their saved daily
+  // tally (weeks/{uid}_{week}.daily). Lets a manager see the pattern — front-loaded
+  // week vs. a Friday scramble — without having to View As the agent.
+  const DAILY_ROWS = [
+    { id: 'fa_sched', label: '1st mtgs scheduled' },
+    { id: 'fa_held', label: '1st mtgs held' },
+    { id: 'ca_sched', label: '2nd mtgs scheduled' },
+    { id: 'ca_held', label: '2nd mtgs held' },
+    { id: 'referrals', label: 'Referrals' }
+  ];
+  function dailyActivityCard(name, week) {
+    const sc = S();
+    const wk = D().weeksForWeek(week).find(w => w.agentName === name);
+    const daily = (wk && wk.daily) || {};
+    const days = sc.weekDays(week, 6);
+    const head = days.map(d => `<th class="num">${d.label}<br><small class="muted">${d.month} ${d.dom}</small></th>`).join('');
+    const rows = DAILY_ROWS.map(m => {
+      let tot = 0;
+      const cells = days.map(d => {
+        const v = Number((daily[d.key] || {})[m.id]) || 0; tot += v;
+        return v ? `<td class="num">${v}</td>` : `<td class="num muted">·</td>`;
+      }).join('');
+      return `<tr><td style="font-weight:600">${m.label}</td>${cells}<td class="num"><b>${tot}</b></td></tr>`;
+    }).join('');
+    const note = Object.keys(daily).length ? '' : `<p class="muted" style="font-size:12.5px;margin:8px 0 0">No daily tally logged for this week yet.</p>`;
+    return `<div class="card">
+      <div class="card-head"><h3>Daily activity</h3><span class="sub">${esc(name.split(' ')[0])}'s week, day by day</span></div>
+      <div class="table-wrap"><table class="data rp-daily">
+        <thead><tr><th>Activity</th>${head}<th class="num">Week</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>${note}
+    </div>`;
+  }
+
   function whoOptions(selected) {
     const names = {};
     D().cases().forEach(c => { if (c.agentName) names[c.agentName] = 1; });
@@ -219,7 +253,7 @@ window.RWG = window.RWG || {};
       ? rowsFor(b.Closed, 'Closed') + rowsFor(b.Submitted, 'Submitted') + rowsFor(b.Opened, 'Opened')
       : `<div class="empty" style="padding:30px"><div class="ec">🗂</div><h3>Nothing this week for ${esc(name)}</h3></div>`;
 
-    return glance + goalsCard(name, cases, week) + glanceMatrix(cases, week) + mixTable(cases, week) + `<div class="card">${body}</div>`;
+    return glance + goalsCard(name, cases, week) + dailyActivityCard(name, week) + glanceMatrix(cases, week) + mixTable(cases, week) + `<div class="card">${body}</div>`;
   }
 
   RWG.modules.register({

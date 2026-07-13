@@ -53,6 +53,16 @@ RWG.app = (function () {
     if (state.viewAs && real && real.role === 'admin') return 'agent';
     return real ? real.role : 'agent';
   }
+  // Set (or clear, with a falsy id) who an admin is viewing, staying on the
+  // current page. Used by the scorecard's agent picker so you can flip between
+  // agents without going back to Team. Only admins may impersonate.
+  function setViewAs(id) {
+    if (!RWG.auth.isAdmin()) return;
+    state.viewAs = id || null;
+    state.search = '';
+    clearSelection();
+    render();
+  }
 
   // Which filter / column set is active depends on context: admin "All Leads" vs the agent's views.
   const isAdminLeads = () => effectiveRole() === 'admin' && state.view === 'leads';
@@ -191,7 +201,7 @@ RWG.app = (function () {
         ${ICONS[n.icon] || ''}<span>${n.label}</span>${badge ? `<span class="badge">${badge}</span>` : ''}</button>`;
     }).join('');
     const banner = impersonating
-      ? `<div class="viewas-banner">👁 Viewing as <b>${U.esc(user.name)}</b> — you're seeing their agent cockpit.<button class="btn btn-sm" data-action="exit-view-as">Exit agent view</button></div>`
+      ? `<div class="viewas-banner">👁 Viewing as <b>${U.esc(user.name)}</b> — their exact cockpit. Changes you make here save on their behalf.<button class="btn btn-sm" data-action="exit-view-as">Exit agent view</button></div>`
       : '';
 
     root().innerHTML = `
@@ -1154,7 +1164,8 @@ RWG.app = (function () {
   }
 
   // The kernel's public surface. Modules use nav() to move around and icons for their tiles.
-  return { boot, bind, state, nav, renderMain, icons: ICONS };
+  // effectiveUser/effectiveRole + viewAs let a module honour admin "view as" for its own reads/writes.
+  return { boot, bind, state, nav, renderMain, icons: ICONS, effectiveUser, effectiveRole, viewAs: setViewAs };
 })();
 
 document.addEventListener('DOMContentLoaded', () => { RWG.app.bind(); RWG.app.boot(); });

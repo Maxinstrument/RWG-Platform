@@ -185,6 +185,23 @@ RWG.scorecardData = (function () {
       .catch(e => { console.error('save week:', e && e.message); throw e; });
   }
 
+  // Save the daily tally (and its rolled-up activity totals) WITHOUT stamping
+  // the week submitted. merge:true means logging a day never wipes a previously
+  // submitted week's other fields, and re-editing a day is idempotent. The
+  // scorecard writes here on every daily cell change; saveWeek() finalises.
+  function saveDaily(partial) {
+    if (!partial.agentUid || !partial.weekEnding) return Promise.reject(new Error('daily needs agentUid and weekEnding'));
+    const id = weekId(partial.agentUid, partial.weekEnding);
+    const existing = cache.weeks.find(w => w.id === id) || {};
+    const row = Object.assign({}, existing, partial, { id: id, updatedAt: nowISO() });
+    const i = cache.weeks.findIndex(w => w.id === id);
+    if (i >= 0) cache.weeks[i] = row; else cache.weeks.push(row);
+    onChange();
+    const payload = Object.assign({}, row); delete payload.id;
+    return db().collection('weeks').doc(id).set(payload, { merge: true })
+      .catch(e => { console.error('save daily:', e && e.message); throw e; });
+  }
+
   // ── migration import (admin): write a fully-formed doc verbatim ──
   // Unlike saveCase, this preserves the exact lifecycle stamps carried over from
   // the old Sheet (it does not re-derive them from state). Idempotent: same
@@ -223,7 +240,7 @@ RWG.scorecardData = (function () {
     weeks, weekFor, weeksForWeek, weekId,
     agentsConfig, agentConfig,
     buildCase, saveCase, setCaseState, deleteCase, adminSetStamps,
-    saveWeek, saveAgentsConfig, importCase, importWeek,
+    saveWeek, saveDaily, saveAgentsConfig, importCase, importWeek,
     CASE_FIELDS, _cache: cache
   };
 })();

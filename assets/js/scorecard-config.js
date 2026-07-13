@@ -245,6 +245,32 @@ RWG.scorecard = (function () {
 
   const currentWeekEnding = () => weekEndingFor(new Date());
 
+  // The Eastern calendar date (yyyy-mm-dd) for a moment — used to highlight
+  // "today" in the daily tally so an agent always knows which column is live.
+  function easternDateKey(ms) {
+    const e = easternParts(ms == null ? Date.now() : ms);
+    return e.year + '-' + e.month + '-' + e.day;
+  }
+  const todayKey = () => easternDateKey(Date.now());
+
+  // The individual days that make up a scorecard week, for the daily tally.
+  // A week is labelled by its Friday and runs Mon..Sun; we surface Mon..Sat by
+  // default (Sunday is almost always empty; Saturday holds seminar activity).
+  // Pure date arithmetic on the Friday label, so daylight saving can't shift it.
+  const DOW_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function weekDays(weekEnding, count) {
+    count = count || 6;                       // Mon..Sat
+    if (!weekEnding) return [];
+    const base = Date.UTC(+weekEnding.slice(0, 4), +weekEnding.slice(5, 7) - 1, +weekEnding.slice(8, 10));
+    const out = [];
+    for (let i = 0; i < count; i++) {
+      const dt = new Date(base + (i - 4) * 86400000);   // i=0 -> Monday (Friday - 4 days)
+      out.push({ key: dt.toISOString().slice(0, 10), label: DOW_LABELS[i] || '', dom: dt.getUTCDate(), month: MONTHS[dt.getUTCMonth()] });
+    }
+    return out;
+  }
+
   // Every Friday of a calendar year, in order (the week picker's source).
   function fridaysOfYear(year) {
     const out = [];
@@ -298,6 +324,7 @@ RWG.scorecard = (function () {
     ACTIVITY_POINTS, WEEKLY_MIN, WEEKLY_MIN_PARTNER,
     AGENT_GOALS, goalsFor, firmShare, scorecardRole, weeklyFloor,
     weekEndingFor, currentWeekEnding, fridaysOfYear,
+    easternDateKey, todayKey, weekDays,
     deriveWeeks, bucketForWeek, activeInWeek, coCredit
   };
 })();

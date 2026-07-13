@@ -738,6 +738,36 @@ table.data .cell-name,table.data .cell-sub{line-height:1.25;}
 .sc-nums .stat{padding:14px;}
 .sc-nums .value{font-size:22px;}
 
+/* daily tally grid */
+.sc-daily th,.sc-daily td{white-space:nowrap;}
+.sc-daily thead th{font-size:12px;vertical-align:bottom;}
+.sc-daily th.sc-metric{text-align:left;font-weight:600;color:var(--navy);}
+.sc-daily td.sc-metric,.sc-daily tbody th.sc-metric{text-align:left;font-weight:600;color:var(--navy);font-size:13px;}
+.sc-dayh{text-align:center;}
+.sc-dayh span{display:block;font-weight:700;color:var(--navy);}
+.sc-dayh small{display:block;font-weight:500;color:var(--muted);font-size:10.5px;margin-top:1px;}
+.sc-weektot{text-align:right;}
+.sc-daycell{width:54px;text-align:center;padding:6px 4px;margin:0;}
+.sc-daily td{text-align:center;padding:6px 5px;}
+.sc-daily .is-today{background:rgba(194,161,77,.10);}
+.sc-dayh.is-today span{color:var(--gold-dark,#8a6d1f);}
+.sc-dayh.is-today{border-bottom:2px solid var(--gold);}
+.sc-rowtot{font-weight:700;color:var(--navy);text-align:right;font-variant-numeric:tabular-nums;}
+
+/* "My Week" nine-goal checklist */
+.mw-line{padding:7px 0;border-bottom:1px solid var(--line);}
+.mw-line:last-child{border-bottom:0;padding-bottom:0;}
+.mw-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px;}
+.mw-label{font-size:12.5px;color:var(--navy);font-weight:600;}
+.mw-auto{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:rgba(14,36,64,.06);border-radius:4px;padding:1px 5px;margin-left:6px;font-weight:700;}
+.mw-val{font-size:12.5px;font-weight:700;color:var(--navy);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.mw-goal{color:var(--muted);font-weight:500;}
+.mw-bar{height:6px;border-radius:999px;background:rgba(14,36,64,.08);overflow:hidden;}
+.mw-fill{height:100%;background:var(--gold);border-radius:999px;transition:width .3s ease;}
+.mw-fill.ok{background:var(--good);}
+.mw-line.met .mw-label{color:var(--good);}
+.mw-line.met .mw-label::after{content:" ✓";color:var(--good);font-weight:700;}
+
 @media (max-width:960px){
   .sc-wrap{grid-template-columns:1fr;}
   .sc-rail{position:static;}
