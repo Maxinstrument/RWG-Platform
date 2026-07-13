@@ -185,6 +185,30 @@ RWG.scorecardData = (function () {
       .catch(e => { console.error('save week:', e && e.message); throw e; });
   }
 
+  // ── migration import (admin): write a fully-formed doc verbatim ──
+  // Unlike saveCase, this preserves the exact lifecycle stamps carried over from
+  // the old Sheet (it does not re-derive them from state). Idempotent: same
+  // recordId overwrites, never duplicates.
+  function importCase(doc) {
+    if (!doc.recordId) return Promise.reject(new Error('import needs a recordId'));
+    const i = cache.cases.findIndex(c => c.recordId === doc.recordId);
+    if (i >= 0) cache.cases[i] = doc; else cache.cases.push(doc);
+    onChange();
+    return db().collection('cases').doc(doc.recordId).set(doc)
+      .catch(e => { console.error('import case:', e && e.message); throw e; });
+  }
+  function importWeek(doc) {
+    if (!doc.agentUid || !doc.weekEnding) return Promise.reject(new Error('import week needs agentUid + weekEnding'));
+    const id = weekId(doc.agentUid, doc.weekEnding);
+    const row = Object.assign({ id: id }, doc);
+    const i = cache.weeks.findIndex(w => w.id === id);
+    if (i >= 0) cache.weeks[i] = row; else cache.weeks.push(row);
+    onChange();
+    const payload = Object.assign({}, doc);
+    return db().collection('weeks').doc(id).set(payload)
+      .catch(e => { console.error('import week:', e && e.message); throw e; });
+  }
+
   // ── config/agents (admin: migration + settings) ──
   function saveAgentsConfig(map) {
     cache.agents = Object.assign({}, map);
@@ -199,7 +223,7 @@ RWG.scorecardData = (function () {
     weeks, weekFor, weeksForWeek, weekId,
     agentsConfig, agentConfig,
     buildCase, saveCase, setCaseState, deleteCase, adminSetStamps,
-    saveWeek, saveAgentsConfig,
+    saveWeek, saveAgentsConfig, importCase, importWeek,
     CASE_FIELDS, _cache: cache
   };
 })();
