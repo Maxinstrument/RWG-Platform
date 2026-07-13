@@ -743,3 +743,9 @@ table.data .cell-name,table.data .cell-sub{line-height:1.25;}
   .sc-rail{position:static;}
   .sc-add-grid{grid-template-columns:1fr 1fr;}
 }
+
+/* ── Report module ───────────────────────────────────────── */
+.rp-glance{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:18px;}
+.rp-total td{border-top:2px solid var(--line-strong);font-weight:700;background:var(--field);}
+.rp-club{margin-top:18px;}
+.rp-club-num{font-family:'Fraunces',serif;font-size:34px;color:var(--navy);margin:6px 0 10px;}
