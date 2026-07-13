@@ -165,8 +165,8 @@ window.RWG = window.RWG || {};
     title: 'Reports',
     enabled: true,
     roles: ['admin'],
-    nav: [{ view: 'report_week', label: 'Reports', icon: 'reports' }],
-    meta: { report_week: { t: 'Reports', s: 'Team production, week by week' } },
+    nav: [{ view: 'report_week', label: 'Production Reports', icon: 'reports' }],
+    meta: { report_week: { t: 'Production Reports', s: 'Cases, premium & pace, week by week' } },
 
     state: { week: null, who: '__team__' },
 

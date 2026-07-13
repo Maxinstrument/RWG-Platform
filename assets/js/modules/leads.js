@@ -21,7 +21,7 @@ window.RWG = window.RWG || {};
 RWG.modules.register({
   id: 'leads',
   title: 'Leads',
-  enabled: false,                       // v1: off. The live CRM is still the source of truth.
+  enabled: true,                        // Consolidated in. Old CRM URL runs alongside during the trial.
   roles: ['admin', 'agent'],
 
   nav: {
@@ -29,7 +29,7 @@ RWG.modules.register({
       { view: 'dashboard', label: 'Command Center', icon: 'dashboard' },
       { view: 'leads',     label: 'All Leads',      icon: 'leads' },
       { view: 'agents',    label: 'Team',           icon: 'team', badge: () => RWG.data.pendingUsers().length },
-      { view: 'reports',   label: 'Weekly Reports', icon: 'reports' },
+      { view: 'reports',   label: 'Lead Reports',   icon: 'reports' },
       { view: 'upload',    label: 'Upload & Assign',icon: 'upload' },
       { view: 'archive',   label: 'Deleted Leads',  icon: 'archive' },
       { view: 'settings',  label: 'Scoring & Settings', icon: 'settings' }
@@ -46,7 +46,7 @@ RWG.modules.register({
     dashboard: { t: 'Command Center', s: 'Team performance, live' },
     leads:     { t: 'All Leads',      s: 'Every lead across the team' },
     agents:    { t: 'Team',           s: 'Agents & approvals' },
-    reports:   { t: 'Weekly Reports', s: 'Agent performance, week by week' },
+    reports:   { t: 'Lead Reports', s: 'Call activity & appointments, week by week' },
     upload:    { t: 'Upload & Assign',s: 'Import and distribute lead lists' },
     archive:   { t: 'Deleted Leads',  s: 'Archived records — restore or erase' },
     settings:  { t: 'Scoring & Settings', s: 'Tune the lead-quality engine' },
