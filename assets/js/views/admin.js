@@ -247,6 +247,11 @@ RWG.views.admin = (function () {
             <div class="card-head"><h3>Data &amp; storage</h3></div>
             <p class="muted" style="font-size:13.5px">Live data is stored securely in your Firebase project (Firestore). Leads, activity, and the change history sync in real time across your team.</p>
           </div>
+          <div class="card" style="margin-top:16px">
+            <div class="card-head"><h3>Data maintenance</h3></div>
+            <p class="muted" style="font-size:13.5px">Recount <b>Attempts</b> from the outreach actually logged: calls, voicemails, texts and emails. System notes like "Appointment scheduled" don't count. It never lowers a number, so attempt counts that came in with a lead list are kept. Safe to run again any time.</p>
+            <div class="mt-8"><button class="btn btn-ghost btn-sm" data-action="recount-attempts">↻ Recount attempts</button></div>
+          </div>
         </div>
       </div>`;
   }

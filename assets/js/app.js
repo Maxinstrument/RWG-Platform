@@ -949,6 +949,21 @@ RWG.app = (function () {
       case 'download-template': downloadTemplate(); break;
       case 'confirm-import': confirmImport(); break;
       case 'cancel-import': state.importRows = null; $('#upload-preview').innerHTML = ''; break;
+      case 'recount-attempts': {
+        if (!RWG.auth.isAdmin()) break;
+        D.recountAttempts().then(dry => {                       // dry run first, always
+          if (!dry.changed.length) { U.toast('Every lead already matches its logged outreach'); return; }
+          const sample = dry.changed.slice(0, 6).map(c => `  ${c.name}: ${c.from} → ${c.to}`).join('\n');
+          const more = dry.changed.length > 6 ? `\n  …and ${dry.changed.length - 6} more` : '';
+          const n = dry.changed.length;
+          if (!confirm(`Update Attempts on ${n} lead${n === 1 ? '' : 's'}?\n\n${sample}${more}\n\nThis writes to the shared lead records, so the live CRM will show the corrected numbers too.`)) return;
+          D.recountAttempts({ apply: true }).then(res => {
+            U.toast(`Recounted ${res.changed.length} lead${res.changed.length === 1 ? '' : 's'}`, true);
+            renderMain();
+          }).catch(e => U.toast(e.message || 'Recount failed'));
+        });
+        break;
+      }
       case 'save-scoring': saveScoring(); break;
       case 'reset-scoring': D.setScoringConfig({}); U.toast('Scoring reset to defaults'); renderMain(); break;
     }
