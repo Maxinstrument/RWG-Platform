@@ -21,6 +21,14 @@ RWG.data = (function () {
   // CRM writes system notes (e.g. "Appointment scheduled for…") as Other, and a
   // system note is not an attempt to reach someone.
   const OUTREACH_TYPES = ['Call', 'Voicemail', 'Text', 'Email'];
+
+  // Stages you can only arrive at by actually making contact. A lead sitting in
+  // one of these with 0 attempts is self-contradictory, so the count is floored
+  // at 1. Deliberately a FLOOR and not an increment: a logged call that results
+  // in an appointment is one attempt, not two. 'No Opportunity' is excluded —
+  // a bad number or an unreachable lead can land there without any contact.
+  const CONTACTED_STAGES = ['Reached', 'Appointment Set', 'Appointment Kept', 'Opportunity Opened'];
+  const floorAttempts = (l) => { if (CONTACTED_STAGES.indexOf(l.stage) >= 0 && (l.attempts || 0) < 1) l.attempts = 1; };
   const PLAN_TYPES = ['Pension Plan', 'Investment Plan', 'DROP', "Don't Know"];
   const ATTENDED_OPTS = ['Yes', 'No', 'Unknown'];
   const MEMBER_CLASSES = ['Regular', 'Special Risk'];
@@ -191,6 +199,7 @@ RWG.data = (function () {
       if (act.disposition) l.disposition = act.disposition;
       if (act.reached && (l.stage === 'New' || l.stage === 'Attempting')) l.stage = 'Reached';
       else if (l.stage === 'New' && act.type === 'Call') l.stage = 'Attempting';
+      floorAttempts(l);
       onChange(); saveLead(l);
       return withScore(l);
     },
@@ -205,7 +214,8 @@ RWG.data = (function () {
       cache.leads.forEach(l => {
         const logged = (l.activities || []).filter(a => OUTREACH_TYPES.indexOf(a.type) >= 0).length;
         const cur = l.attempts || 0;
-        const next = Math.max(cur, logged);
+        let next = Math.max(cur, logged);
+        if (CONTACTED_STAGES.indexOf(l.stage) >= 0 && next < 1) next = 1;   // booked/reached implies contact
         if (next !== cur) changed.push({ id: l.id, name: fullName(l), from: cur, to: next });
       });
       if (!(opts && opts.apply)) return Promise.resolve({ changed: changed, applied: false });
@@ -232,6 +242,7 @@ RWG.data = (function () {
       if (extra && extra.apptDate) { l.apptDate = extra.apptDate; note = 'Appointment ' + (old === 'Appointment Set' ? 'rescheduled' : 'set') + ' for ' + new Date(extra.apptDate).toLocaleString('en-US'); }
       if (extra && extra.outcome) l.outcome = extra.outcome;
       if (stage === 'Appointment Set') l.disposition = 'Appointment Set';
+      floorAttempts(l);        // booking (or dragging a card to Reached/Appt) implies contact happened
       logChange(l, by, changes, note);
       onChange(); saveLead(l);
       return withScore(l);
